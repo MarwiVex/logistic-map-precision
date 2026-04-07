@@ -22,7 +22,7 @@ Las simulaciones numéricas demostraron el "Efecto Mariposa" y la sensibilidad a
 ## Estructura de Archivos
 * simulation: Algoritmos de generación de trayectorias.
 * analisis_error.cpp: Script para el cálculo de divergencias y errores relativos.
-* resultados_comparacion.csv: Dataset consolidado con 1000 iteraciones.
+* resultados: Dataset consolidado con 1000 iteraciones de los diferentes tipos de datos.
 
 El proyecto requiere las librerías MPFR y GMP. La forma más robusta de instalarlas en Windows es mediante MSYS2:
 
