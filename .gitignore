@@ -1,0 +1,15 @@
+# CLion y configuraciones locales
+.idea/
+cmake-build-*/
+*.user
+
+# Archivos compilados y binarios
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+*.a
+
+# Entornos virtuales o dependencias pesadas (si las tuvieras)
+/venv/
