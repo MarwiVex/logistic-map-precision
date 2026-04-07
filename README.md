@@ -20,7 +20,7 @@ Las simulaciones numéricas demostraron el "Efecto Mariposa" y la sensibilidad a
 3.  **Análisis Logarítmico:** Se observó un crecimiento exponencial del error, validando la pérdida de información progresiva característica de los sistemas dinámicos caóticos.
 
 ## Estructura de Archivos
-* _sim.cpp: Algoritmos de generación de trayectorias.
+* Simulation: Algoritmos de generación de trayectorias.
 * analisis_error.cpp: Script para el cálculo de divergencias y errores relativos.
 * resultados_comparacion.csv: Dataset consolidado con 1000 iteraciones.
 
