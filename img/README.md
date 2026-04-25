@@ -6,13 +6,18 @@ Este directorio almacena las representaciones gráficas resultantes de la simula
 
 Para cada escenario experimental se generaron dos gráficos complementarios:
 
-* **`Exp_[ID]_Divergencia.png`**: Compara la evolución del estado poblacional ($x_n$). Contrasta el límite de precisión simple (`float`, 32-bit) y doble (`double`, 64-bit) frente al conjunto de control calculado con precisión arbitraria (`MPFR`). Permite identificar visualmente la iteración de colapso numérico.
-* **`Exp_[ID]_ErrorLog.png`**: Cuantifica el crecimiento del error absoluto en escala logarítmica base 10. Muestra la amplificación exponencial del error de redondeo iteración tras iteración, mitigando los valores nulos iniciales mediante el límite de resolución (cero de máquina).
+* **`Divergencia_EXP-R[VALOR]-X[VALOR].png`**: Compara la evolución del estado poblacional ($x_n$). Contrasta el límite de precisión simple (`float`, 32-bit) y doble (`double`, 64-bit) frente al conjunto de control calculado con precisión arbitraria (`MPFR`). Permite identificar visualmente la iteración de colapso numérico.
+* **`Error_EXP-R[VALOR]-X[VALOR].png`**: Cuantifica el crecimiento del error absoluto en escala logarítmica base 10. Muestra la amplificación exponencial del error de redondeo iteración tras iteración, mitigando los valores nulos iniciales mediante el límite de resolución (cero de máquina).
 
-## Cómo interpretar los Identificadores (ID)
+## Estructura de los Identificadores (ID)
 
-Cada par de gráficas está asociado a un identificador único (ej. `Exp_1`, `Exp_15`, `Exp_35`). 
+A diferencia de un índice numérico arbitrario, los nombres de los archivos están codificados para reflejar directamente los parámetros de control del sistema dinámico:
 
-Este número corresponde a la columna **`ID_Exp`** del dataset maestro ubicado en la carpeta `results/`. Para conocer las condiciones exactas de una gráfica, busca su `ID` en el archivo de datos; este revelará la configuración específica de:
-1.  **Tasa de crecimiento ($r$)**
-2.  **Condición inicial ($x_0$)**
+**Formato:** `[Tipo]_EXP-R[Tasa]-X[Condición]`
+
+1. **R (Tasa de crecimiento):** El valor inmediatamente posterior a la `R` indica el parámetro de control $r$ utilizado en la ecuación $x_{n+1} = rx_n(1-x_n)$. 
+   * *Ejemplo:* `R4.00` representa un régimen de caos total.
+2. **X (Condición inicial):** El valor posterior a la `X` indica el valor de $x_0$ con el que inició la semilla del experimento.
+   * *Ejemplo:* `X0.1` representa una población inicial del 10% del máximo posible.
+
+De este modo, un archivo nombrado `Divergencia_EXP-R3.92-X0.2.png` permite identificar rápidamente que la simulación corresponde a una tasa de $3.92$ con una semilla inicial de $0.2$.
