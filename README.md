@@ -20,25 +20,37 @@ Se calcularon 1000 iteraciones variando:
 
 El directorio `img/` consolida el registro gráfico de las primeras 100 iteraciones para los 35 escenarios. Las representaciones visuales demuestran la iteración crítica de ruptura topológica.
 
+<br>
+
 ### Divergencia de Trayectorias
 La gráfica de divergencia ilustra el punto exacto en el que la aproximación de la máquina destruye la predicción matemática real.
+
+<br>
+
 ![Divergencia R=4.00, X0=0.1](img/Divergencia_EXP-R4.00-X0.1.png)
+
+<br>
 
 ### Crecimiento del Error Absoluto
 Cuantificación en escala logarítmica (base 10) de la amplificación del error de redondeo inducido por la limitación de bits.
+
+<br>
+
 ![Error Absoluto R=4.00, X0=0.1](img/Error_EXP-R4.00-X0.1.png)
+
+<br>
 
 ## Resultados Clave
 
 El procesamiento consolidado de los 35 escenarios demostró empíricamente el "Efecto Mariposa" subyacente en la arquitectura de datos:
-1.  **Precisión Simple (float 32-bit):** Independientemente de la configuración inicial, la trayectoria diverge totalmente del modelo matemático real cerca de la iteración 23, provocado por la saturación de sus 24 bits efectivos de mantisa.
-2.  **Precisión Doble (double 64-bit):** Su mantisa de 53 bits retrasa la corrupción de datos, pero colapsa irremediablemente cerca de la iteración 52.
-3.  **Comportamiento del Error:** La propagación del ruido algorítmico mantiene una tasa de amplificación exponencial en todos los vectores probados.
+1. **Precisión Simple (float 32-bit):** Independientemente de la configuración inicial, la trayectoria diverge totalmente del modelo matemático real cerca de la iteración 23, provocado por la saturación de sus 24 bits efectivos de mantisa.
+2. **Precisión Doble (double 64-bit):** Su mantisa de 53 bits retrasa la corrupción de datos, pero colapsa irremediablemente cerca de la iteración 52.
+3. **Comportamiento del Error:** La propagación del ruido algorítmico mantiene una tasa de amplificación exponencial en todos los vectores probados.
 
 ## Estructura de Archivos
 * `simulation/`: Algoritmos en C++ para la generación de trayectorias (Float, Double, MPFR).
 * `analisis_error.cpp`: Script encargado de procesar los registros simultáneos, calcular diferencias absolutas y relativas.
-* `results/`: Dataset consolidado en formato CSV con los registros analíticos iteración por iteración.
+* `results/`: Dataset consolidado con 1000 iteraciones por escenario.
 * `img/`: Gráficas resultantes de divergencia y propagación de error.
 
 ## Stack Tecnológico y Dependencias
