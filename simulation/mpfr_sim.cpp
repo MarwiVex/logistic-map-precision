@@ -1,55 +1,64 @@
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <vector>
 #include <mpfr.h>
 
 int main() {
-    // Establecer la precision global a 4096 bits.
-    // El mapa logistico en caos pierde aprox 1 bit de resolucion por iteracion.
-    // Con 4096 bits, garantizamos exactitud total en el umbral de 1000 iteraciones.
+    // Configuración de 4096 bits para garantizar exactitud tras 1000 iteraciones [cite: 46, 47]
     mpfr_set_default_prec(4096);
 
-    // Declaracion e inicializacion de variables MPFR
-    mpfr_t r, x, temp;
-    mpfr_init(r);
-    mpfr_init(x);
+    // Parámetros experimentales en formato string para evitar truncamiento inicial [cite: 49]
+    const std::vector<std::string> tasas_r = {"3.90", "3.92", "3.95", "3.98", "4.00"};
+    const std::vector<std::string> cond_x0 = {"0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7"};
+    const int iteraciones = 1000;
+
+    // Inicialización de variables MPFR
+    mpfr_t r_mpfr, x_mpfr, temp;
+    mpfr_init(r_mpfr);
+    mpfr_init(x_mpfr);
     mpfr_init(temp);
 
-    // Asignacion de parametros iniciales con redondeo estricto
-    mpfr_set_d(r, 4.0, MPFR_RNDN); // Tasa de crecimiento
-    mpfr_set_d(x, 0.1, MPFR_RNDN); // Condicion inicial
-
-    // Preparacion del archivo de salida
     std::ofstream archivo("trayectoria_mpfr.csv");
-    archivo << "Iteracion,Valor\n";
+    archivo << "ID_Exp,Iteracion,Valor\n";
 
-    // Buffer para almacenar la representacion en texto del numero (50 decimales)
-    char buffer[100];
+    char buffer[150];
 
-    // Guardar el valor en la iteracion 0
-    mpfr_snprintf(buffer, sizeof(buffer), "%.50Rf", x);
-    archivo << 0 << "," << buffer << "\n";
+    // Ejecución de la batería de 35 experimentos [cite: 48, 50]
+    for (const auto& r_str : tasas_r) {
+        for (const auto& x0_str : cond_x0) {
 
-    // Bucle principal: x_{n+1} = r * x_n * (1 - x_n)
-    for (int i = 1; i <= 1000; ++i) {
-        // Desglose de la ecuacion en pasos para MPFR
-        mpfr_ui_sub(temp, 1, x, MPFR_RNDN); // temp = 1 - x
-        mpfr_mul(x, x, temp, MPFR_RNDN);    // x = x * temp
-        mpfr_mul(x, x, r, MPFR_RNDN);       // x = x * r
+            // Asignación directa desde string para preservar precisión matemática [cite: 64]
+            mpfr_set_str(r_mpfr, r_str.c_str(), 10, MPFR_RNDN);
+            mpfr_set_str(x_mpfr, x0_str.c_str(), 10, MPFR_RNDN);
 
-        // Formatear el resultado a 50 decimales para el conjunto de control
-        mpfr_snprintf(buffer, sizeof(buffer), "%.50Rf", x);
-        archivo << i << "," << buffer << "\n";
+            std::string id_exp = "EXP-R" + r_str + "-X" + x0_str;
+
+            // Registro de condición inicial (n=0)
+            mpfr_snprintf(buffer, sizeof(buffer), "%.50Rf", x_mpfr);
+            archivo << id_exp << ",0," << buffer << "\n";
+
+            // Bucle del mapa logístico: x = r * x * (1 - x) [cite: 14, 73]
+            for (int i = 1; i <= iteraciones; ++i) {
+                mpfr_ui_sub(temp, 1, x_mpfr, MPFR_RNDN);     // (1 - x)
+                mpfr_mul(x_mpfr, x_mpfr, temp, MPFR_RNDN);   // x * (1 - x)
+                mpfr_mul(x_mpfr, x_mpfr, r_mpfr, MPFR_RNDN); // r * x * (1 - x)
+
+                // Exportación a 50 decimales (Conjunto de Control) [cite: 53, 54]
+                mpfr_snprintf(buffer, sizeof(buffer), "%.50Rf", x_mpfr);
+                archivo << id_exp << "," << i << "," << buffer << "\n";
+            }
+        }
     }
 
     archivo.close();
 
-    // Liberar la memoria asignada a los tipos dinamicos
-    mpfr_clear(r);
-    mpfr_clear(x);
+    // Liberación de memoria MPFR
+    mpfr_clear(r_mpfr);
+    mpfr_clear(x_mpfr);
     mpfr_clear(temp);
 
-    std::cout << "Simulacion con MPFR (Control) completada." << std::endl;
-    std::cout << "Se genero el archivo: trayectoria_mpfr.csv" << std::endl;
+    std::cout << "Simulacion MPFR completada. Archivo generado: trayectoria_mpfr.csv" << std::endl;
 
     return 0;
 }
