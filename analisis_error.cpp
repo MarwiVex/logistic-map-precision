@@ -21,8 +21,8 @@ int main() {
         return 1;
     }
 
-    // Nuevos encabezados incorporando los metadatos del experimento
-    arch_out << "ID_Exp,Iteracion,Valor_MPFR,Valor_Float,Dif_Abs_Float,Err_Rel_Float_%,Valor_Double,Dif_Abs_Double,Err_Rel_Double_%\n";
+    // Nuevos encabezados incorporando metadatos del experimento y diferencia acumulada
+    arch_out << "ID_Exp,Iteracion,Valor_MPFR,Valor_Float,Dif_Abs_Float,Err_Rel_Float_%,Dif_Acum_Float,Valor_Double,Dif_Abs_Double,Err_Rel_Double_%,Dif_Acum_Double\n";
 
     std::string linea_f, linea_d, linea_m;
 
@@ -33,11 +33,20 @@ int main() {
 
     // Inicialización del ecosistema MPFR
     mpfr_t val_m, val_f, val_d, dif_f, dif_d, err_f, err_d;
+    mpfr_t acum_dif_f, acum_dif_d; // Variables para la diferencia acumulada
+
     mpfr_init(val_m); mpfr_init(val_f); mpfr_init(val_d);
     mpfr_init(dif_f); mpfr_init(dif_d); mpfr_init(err_f); mpfr_init(err_d);
 
+    // Inicializar acumuladores en cero
+    mpfr_init_set_ui(acum_dif_f, 0, MPFR_RNDN);
+    mpfr_init_set_ui(acum_dif_d, 0, MPFR_RNDN);
+
     char buf_val_m[100], buf_val_f[100], buf_val_d[100];
-    char buf_dif_f[100], buf_err_f[100], buf_dif_d[100], buf_err_d[100];
+    char buf_dif_f[100], buf_err_f[100], buf_acum_f[100];
+    char buf_dif_d[100], buf_err_d[100], buf_acum_d[100];
+
+    std::string id_exp_actual = ""; // Control de estado para reiniciar acumuladores por ejecución
 
     // Procesamiento lineal asíncrono (1:1 correspondencia de filas)
     while (std::getline(arch_mpfr, linea_m) &&
@@ -56,6 +65,14 @@ int main() {
         std::getline(ss_m, iteracion, ',');
         std::getline(ss_m, str_m, ',');
 
+        // Control de ejecuciones: reiniciar diferencia acumulada al iniciar un nuevo experimento
+        // El ID_Exp codifica la tasa de crecimiento (R) y la condición inicial (X)
+        if (id_exp != id_exp_actual) {
+            mpfr_set_ui(acum_dif_f, 0, MPFR_RNDN);
+            mpfr_set_ui(acum_dif_d, 0, MPFR_RNDN);
+            id_exp_actual = id_exp;
+        }
+
         // Tokenización de Float y Double (Solo nos interesa la 3ra columna)
         std::getline(ss_f, basura, ','); std::getline(ss_f, basura, ','); std::getline(ss_f, str_f, ',');
         std::getline(ss_d, basura, ','); std::getline(ss_d, basura, ','); std::getline(ss_d, str_d, ',');
@@ -69,6 +86,9 @@ int main() {
         mpfr_sub(dif_f, val_f, val_m, MPFR_RNDN);
         mpfr_abs(dif_f, dif_f, MPFR_RNDN);
 
+        // Actualización de la diferencia acumulada
+        mpfr_add(acum_dif_f, acum_dif_f, dif_f, MPFR_RNDN);
+
         mpfr_div(err_f, dif_f, val_m, MPFR_RNDN);
         mpfr_abs(err_f, err_f, MPFR_RNDN);
         mpfr_mul_ui(err_f, err_f, 100, MPFR_RNDN);
@@ -77,31 +97,38 @@ int main() {
         mpfr_sub(dif_d, val_d, val_m, MPFR_RNDN);
         mpfr_abs(dif_d, dif_d, MPFR_RNDN);
 
+        // Actualización de la diferencia acumulada
+        mpfr_add(acum_dif_d, acum_dif_d, dif_d, MPFR_RNDN);
+
         mpfr_div(err_d, dif_d, val_m, MPFR_RNDN);
         mpfr_abs(err_d, err_d, MPFR_RNDN);
         mpfr_mul_ui(err_d, err_d, 100, MPFR_RNDN);
 
         // --- FORMATEO Y EXPORTACIÓN ---
         mpfr_snprintf(buf_val_m, sizeof(buf_val_m), "%.17Re", val_m);
+
         mpfr_snprintf(buf_val_f, sizeof(buf_val_f), "%.9Re", val_f);
         mpfr_snprintf(buf_dif_f, sizeof(buf_dif_f), "%.5Re", dif_f);
         mpfr_snprintf(buf_err_f, sizeof(buf_err_f), "%.5Re", err_f);
+        mpfr_snprintf(buf_acum_f, sizeof(buf_acum_f), "%.5Re", acum_dif_f);
 
         mpfr_snprintf(buf_val_d, sizeof(buf_val_d), "%.17Re", val_d);
         mpfr_snprintf(buf_dif_d, sizeof(buf_dif_d), "%.5Re", dif_d);
         mpfr_snprintf(buf_err_d, sizeof(buf_err_d), "%.5Re", err_d);
+        mpfr_snprintf(buf_acum_d, sizeof(buf_acum_d), "%.5Re", acum_dif_d);
 
-        // Construcción de la fila de salida con metadatos incorporados
+        // Construcción de la fila de salida con metadatos y acumuladores incorporados
         arch_out << id_exp << "," << iteracion << ","
                  << buf_val_m << ","
-                 << buf_val_f << "," << buf_dif_f << "," << buf_err_f << ","
-                 << buf_val_d << "," << buf_dif_d << "," << buf_err_d << "\n";
+                 << buf_val_f << "," << buf_dif_f << "," << buf_err_f << "," << buf_acum_f << ","
+                 << buf_val_d << "," << buf_dif_d << "," << buf_err_d << "," << buf_acum_d << "\n";
     }
 
     // Limpieza rigurosa de descriptores de archivo y memoria del heap
     arch_float.close(); arch_double.close(); arch_mpfr.close(); arch_out.close();
     mpfr_clear(val_m); mpfr_clear(val_f); mpfr_clear(val_d);
     mpfr_clear(dif_f); mpfr_clear(dif_d); mpfr_clear(err_f); mpfr_clear(err_d);
+    mpfr_clear(acum_dif_f); mpfr_clear(acum_dif_d);
 
     std::cout << "Análisis y cruce de datos completado (35,000 registros procesados)." << std::endl;
     std::cout << "Se generó la tabla consolidada: resultados_comparacion.csv" << std::endl;
